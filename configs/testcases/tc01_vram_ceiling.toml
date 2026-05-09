@@ -1,0 +1,13 @@
+# TC-01: Technical Specification Recall — Shallow
+# Tests whether model can extract an exact numeric value from a table
+[testcase]
+id = "TC-01"
+name = "VRAM Green-band ceiling extraction"
+corpus = "moe_offload_experiment"
+document = "Z8_G4_MoE_SOAK_Report.md"
+query = "What is the VRAM ceiling in MiB for the Green band on the P5000?"
+expected_extraction = "13,107 MiB"
+scoring_mode = "keyword_match"
+routing_assertion = "technical"
+failure_signal = "any value other than 13,107 or hallucinated ceiling"
+no_think = true

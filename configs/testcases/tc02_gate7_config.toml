@@ -1,0 +1,16 @@
+# TC-02: Technical Specification Recall — Deep (positional)
+# Tests whether model can extract a multi-field config from a mid-document table
+# Section 10 P5000 Ladder BEST GREEN row: ncmoe=20, gen=39.3, VRAM=11,770
+[testcase]
+id = "TC-02"
+name = "P5000 Ladder best-Green config extraction"
+corpus = "moe_offload_experiment"
+document = "Z8_G4_MoE_SOAK_Report.md"
+query = "This document has a section titled '10. MoE-to-VRAM Ladder Results — Qwen3-30B-A3B', which contains a 'P5000 Ladder' table. Find the row in that table marked 'BEST GREEN' and state: the --n-cpu-moe value, the tok/s gen value, and the VRAM MiB value for that specific row."
+expected_ncmoe = "20"
+expected_gen = "39.3"
+expected_vram = "11,770"
+scoring_mode = "multi_field"
+routing_assertion = "technical"
+failure_signal = "reads Gate 8 row instead of section 10 P5000 Ladder BEST GREEN"
+no_think = true

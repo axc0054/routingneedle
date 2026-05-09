@@ -1,0 +1,11 @@
+[testcase]
+id = "TC-03"
+name = "Vulkan lane binary path extraction"
+corpus = "moe_offload_experiment"
+document = "Software/GGUF_Runtime_Standard.md"
+query = "Based on this document, what is the canonical binary path for the Vulkan lane llama-cli?"
+expected_extraction = "/home/alex/llama.cpp/build/bin/llama-cli"
+scoring_mode = "keyword_match"
+routing_assertion = "technical"
+failure_signal = "wrong path or hallucinated binary location"
+no_think = true

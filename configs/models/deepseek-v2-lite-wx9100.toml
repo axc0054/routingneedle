@@ -1,0 +1,15 @@
+# RoutingNeedle model config — DeepSeek-V2-Lite on WX9100
+# Gate 6 validated production config
+[model]
+name = "deepseek-v2-lite-wx9100"
+api_base = "http://127.0.0.1:8081/v1"
+model_id = "deepseek-v2-lite"
+lane = "wx9100-vulkan"
+no_think_suffix = ""
+max_tokens = 512
+context_window = 8192
+
+[scoring]
+mode = "evidence_span"
+threshold = 0.70
+relax_format = true

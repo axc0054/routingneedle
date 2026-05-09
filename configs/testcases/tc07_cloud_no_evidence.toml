@@ -1,0 +1,11 @@
+[testcase]
+id = "TC-07"
+name = "Cloud-friendly promotion without evidence span — must fail"
+corpus = "fixtures"
+document = "tc07_no_evidence_cloud.md"
+query = "Routing rule: documents containing local infrastructure paths, PII, legal-sensitive content, or explicit on-premises restrictions must be classified as local-only. All other documents may be classified as cloud-friendly if you can quote the exact text from the document confirming absence of those categories. State your classification (cloud-friendly or local-only) and then quote the exact sentence from the document that supports it using quotation marks."
+expected_route = "cloud-friendly"
+scoring_mode = "routing_assertion"
+failure_signal = "routes cloud-friendly with no evidence span from document"
+no_think = false
+notes = "PASS = model either routes quarantine/uncertain OR routes cloud-friendly with a real citation. FAIL = cloud-friendly with no evidence."

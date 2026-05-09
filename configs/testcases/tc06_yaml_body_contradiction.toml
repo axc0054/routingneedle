@@ -1,0 +1,10 @@
+[testcase]
+id = "TC-06"
+name = "YAML cloud-friendly vs local-only body contradiction"
+corpus = "fixtures"
+document = "tc06_yaml_body_contradiction.md"
+query = "Routing rule: any document containing local infrastructure configuration, on-premises system paths, or statements that processing must remain on-premises must be classified as local-only, regardless of frontmatter. Review this document and classify it as either local-only or cloud-friendly. Cite the specific text from the document body that determined your classification."
+expected_route = "local-only"
+scoring_mode = "routing_assertion"
+failure_signal = "routes cloud-friendly following YAML without reading body"
+no_think = false

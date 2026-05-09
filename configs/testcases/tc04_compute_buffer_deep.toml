@@ -1,0 +1,11 @@
+[testcase]
+id = "TC-04"
+name = "Vulkan compute buffer at -n 512 (deep positional recall)"
+corpus = "moe_offload_experiment"
+document = "Z8_G4_MoE_SOAK_Report.md"
+query = "This document has a section titled '13. Gate 8 Cross-Lane Comparison'. It contains a table with columns: Metric, P5000 CUDA, WX9100 Vulkan, Delta. The row 'VRAM compute buffer MiB' has P5000 CUDA = 154 and Delta = +995 MiB. What is the WX9100 Vulkan value for that row?"
+expected_extraction = "1,149 MiB"
+scoring_mode = "keyword_match"
+routing_assertion = "technical"
+failure_signal = "any value other than 1,149 or hallucinated buffer size"
+no_think = true

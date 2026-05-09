@@ -1,0 +1,11 @@
+[testcase]
+id = "TC-05"
+name = "P5000 abort floor — evidence-span required"
+corpus = "moe_offload_experiment"
+document = "Software/GPU_Validation_Policy.md"
+query = "What is the P5000 runtime abort floor in MiB, and what section of this document states this rule?"
+expected_extraction = "2,500 MiB"
+scoring_mode = "evidence_span"
+routing_assertion = "technical"
+failure_signal = "wrong floor value or no document section cited"
+no_think = true

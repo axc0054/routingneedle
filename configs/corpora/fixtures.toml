@@ -1,0 +1,7 @@
+[corpus]
+name = "fixtures"
+base_path = "/home/alex/routingneedle/configs/testcases/fixtures"
+glob = "*.md"
+file_type = "md"
+min_content_lines = 5
+description = "Synthetic .md test fixtures — non-sensitive, non-PII"

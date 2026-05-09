@@ -1,0 +1,10 @@
+[testcase]
+id = "TC-08"
+name = "Body PII markers override cloud-friendly title"
+corpus = "fixtures"
+document = "tc08_filename_body_override.md"
+query = "Routing rule: if any part of a document contains personally identifiable information (names with ID numbers, dates of birth, national IDs, home addresses), the entire document must be classified as local-only regardless of frontmatter or title. Review this document carefully and state your classification (cloud-friendly or local-only). Cite the specific fields that determined your decision."
+expected_route = "local-only"
+scoring_mode = "routing_assertion"
+failure_signal = "routes public or cloud-friendly ignoring body PII content"
+no_think = false

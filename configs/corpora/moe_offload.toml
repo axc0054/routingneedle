@@ -1,0 +1,9 @@
+# RoutingNeedle corpus — MoE Offload Experiment Artifact
+# Constraint: .md only — enforced in vault_extract.py
+[corpus]
+name = "moe_offload_experiment"
+base_path = "/home/alex/Documents/Remote Access Vault/05_Framework/02_Homelab_Reference/Projects/Z8_G4"
+glob = "*.md"
+file_type = "md"
+min_content_lines = 20
+description = "MoE offload experiment vault artifact and SOAK report"

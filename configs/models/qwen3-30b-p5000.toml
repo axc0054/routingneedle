@@ -1,0 +1,16 @@
+# RoutingNeedle model config — Qwen3-30B-A3B on P5000
+# Gate 8 validated production config
+[model]
+name = "qwen3-30b-a3b-p5000"
+api_base = "http://127.0.0.1:8082/v1"
+model_id = "qwen3-30b-a3b"
+lane = "p5000-cuda"
+no_think_suffix = " /no_think"
+force_no_think = true
+max_tokens = 256
+context_window = 16384
+
+[scoring]
+mode = "evidence_span"
+threshold = 0.75
+relax_format = true
