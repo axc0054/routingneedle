@@ -1,3 +1,85 @@
+# RoutingNeedle
+
+Council QA benchmark and tiered cascade routing harness for vault document ingestion.
+Validates that local LLMs extract correct evidence from vault documents rather than
+hallucinating answers from training knowledge.
+
+Forked from CodeNeedle (positional recall benchmark — see [below](#positional-recall-benchmark)).
+
+## Council QA Benchmark
+
+Two-tier council evaluating vault restructure decisions against a binding adjudication matrix.
+
+| Tier | Model | Hardware | Port | Role |
+|------|-------|----------|------|------|
+| T1 | DeepSeek-V2-Lite Q4_K_M | WX9100 / Vulkan / NUMA node 1 | 8081 | Triage reference; degeneration-tagged |
+| T2 | Qwen3-30B-A3B Q4_K_M | P5000 / CUDA / NUMA node 0 | 8082 | Authoritative council tier |
+
+**Current standing (2026-05-10, Run 2):** T2 scaffolded 14/15 MATCH (93%). Full workflow in [`COUNCIL_BENCHMARK_WORKFLOW.md`](COUNCIL_BENCHMARK_WORKFLOW.md).
+
+### Start servers
+
+```bash
+# Terminal 1 — DeepSeek on WX9100 (NUMA node 1)
+bash configs/servers/wx9100-deepseek.sh
+
+# Terminal 2 — Qwen on P5000 (NUMA node 0)
+bash configs/servers/p5000-qwen30b.sh
+```
+
+### Run council tests
+
+```bash
+# Blind (Drift Profile only — establish baseline first)
+cd bench && python council_blind_test.py
+# -> Council_Test_Results_Blind.json
+
+# Scaffolded (Drift Profile + section context per SECTION_MAP)
+cd bench && python council_matrix_test.py
+# -> Council_Test_Results_Scaffolded.json
+```
+
+T1 responses are tagged `T1_degenerated: true` when repetition-loop collapse is detected.
+T2 is the authoritative tier. See [`COUNCIL_BENCHMARK_WORKFLOW.md`](COUNCIL_BENCHMARK_WORKFLOW.md) for scoring and iteration process.
+
+## Cascade Routing (TC-01 through TC-08)
+
+Tiered failure propagation for the main document-injection QA suite. T1 handles fast triage;
+T2 is called only when T1 triggers an escalation.
+
+```bash
+python3 bench/run_suite.py \
+  --model configs/models/deepseek-v2-lite-wx9100.toml \
+  --cascade configs/models/qwen3-30b-p5000.toml \
+  --testcases configs/testcases/ \
+  --corpora configs/corpora/ \
+  [--queue /home/alex/logs/adjudicator_queue.jsonl]
+```
+
+Escalation triggers: `file_size`, `context_pressure` (75% of T1 context window), `token_size`,
+`file_type`, `empty_file`, `api_error`, `first_token_decision`, `response_degeneration`.
+See [`bench/cascade.py`](bench/cascade.py) for full documentation.
+
+**Standing (2026-05-09):** 8/8 PASS — TC-01 through TC-08.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `bench/council_blind_test.py` | Blind condition runner |
+| `bench/council_matrix_test.py` | Scaffolded runner |
+| `bench/cascade.py` | Tiered cascade routing for TC suite |
+| `bench/run_testcase.py` | Document injection pipeline |
+| `bench/council_scorer.py` | Five scoring modes for TC suite |
+| `bench/run_suite.py` | Full TC suite runner |
+| `bench/vault_extract.py` | .md-only corpus adapter |
+| `configs/models/` | Model configs (api_base, context_window, lane) |
+| `configs/servers/` | Server startup scripts with NUMA pinning |
+| `configs/testcases/` | TC-01 through TC-08 TOML definitions |
+| `COUNCIL_BENCHMARK_WORKFLOW.md` | Full council benchmark workflow |
+
+---
+
 # Positional Recall Benchmark
 
 Reproduces the benchmark from the YouTube video (see `benchmark_plan.md`):

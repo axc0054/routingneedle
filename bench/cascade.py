@@ -2,17 +2,24 @@
 cascade.py — RoutingNeedle tiered cascade routing.
 
 Implements failure propagation across model tiers:
-  Tier 1: DeepSeek-V2-Lite (WX9100 Vulkan, fast triage)
-  Tier 2: Qwen3-30B-A3B   (P5000 CUDA,    generalist reasoner)
+  Tier 1: DeepSeek-V2-Lite (WX9100 Vulkan, NUMA node 1, fast triage)
+  Tier 2: Qwen3-30B-A3B   (P5000 CUDA,    NUMA node 0, generalist reasoner)
   Tier 3+: Adjudicator queue (frontier models + user — not called live)
 
 Propagation triggers (any one fires escalation to next tier):
-  file_size          document below minimum viable size for this tier
-  token_size         estimated tokens exceed model context ceiling
-  file_type          non-.md extension (vault_extract enforces upstream)
-  empty_file         document has no content after strip
-  api_error          connection failure, timeout, or HTTP error from server
+  file_size             document below minimum viable size for this tier
+  context_pressure      estimated tokens > 75% of T1 context window (pre-flight, T1 only)
+  token_size            estimated tokens exceed model context hard ceiling
+  file_type             non-.md extension (vault_extract enforces upstream)
+  empty_file            document has no content after strip
+  api_error             connection failure, timeout, or HTTP error from server
   first_token_decision  response echoes document header without reading content
+  response_degeneration same phrase repeated >4 times (MoE routing collapse pattern)
+
+context_pressure fires at 75% of T1's 8,192-token context window (6,144 tokens /
+~24,576 chars). This keeps T1 in its stable operating zone — above this threshold,
+MLA latent noise accumulation and MoE routing entropy increase sharply. Documents
+above the soft ceiling route directly to T2 without calling T1.
 
 Adjudicator queue: unresolved cases are appended as JSONL.
 Frontier model API calls are NOT made here — cases are queued for external
@@ -36,12 +43,14 @@ from vault_extract import load_vault_document
 
 
 class EscalationReason(str, Enum):
-    FILE_SIZE          = "file_size"
-    TOKEN_SIZE         = "token_size"
-    FILE_TYPE          = "file_type"
-    EMPTY_FILE         = "empty_file"
-    API_ERROR          = "api_error"
+    FILE_SIZE            = "file_size"
+    TOKEN_SIZE           = "token_size"
+    CONTEXT_PRESSURE     = "context_pressure"
+    FILE_TYPE            = "file_type"
+    EMPTY_FILE           = "empty_file"
+    API_ERROR            = "api_error"
     FIRST_TOKEN_DECISION = "first_token_decision"
+    RESPONSE_DEGENERATION = "response_degeneration"
 
 
 # Minimum document size (chars) for reliable tier-1 triage.
@@ -56,6 +65,19 @@ _OVERHEAD_TOKENS = 200
 
 # Response length ceiling for first-token-decision detection
 _ECHO_RESPONSE_MAX_CHARS = 80
+
+# Tier-1 soft pre-emption threshold.
+# When estimated tokens exceed this fraction of T1's context window, route
+# proactively to T2 before MLA latent noise accumulates. At 75% the model is
+# still within its stable operating zone; above it, MoE routing entropy rises
+# and context-echo degeneration risk increases sharply.
+_T1_PREEMPT_RATIO = 0.75
+
+# Repetition-loop degeneration detection parameters.
+# Phrase length and repeat count tuned for the council-test echo pattern
+# (T1 emitting "## Council Decision\n---\n## Council Notes" hundreds of times).
+_DEGEN_PHRASE_LEN   = 40
+_DEGEN_MAX_REPEATS  = 4
 
 
 @dataclass
@@ -120,6 +142,26 @@ def _is_first_token_decision(response: str) -> bool:
     return False
 
 
+def _is_response_degeneration(response: str) -> bool:
+    """
+    True when the response is a repetition loop — the same phrase appears more
+    than _DEGEN_MAX_REPEATS times. Catches the MoE routing collapse pattern where
+    T1 emits the same structural phrase (e.g., '## Council Decision') hundreds of
+    times without producing meaningful content.
+
+    Samples phrases from the first quarter of the response to avoid false positives
+    on legitimately repetitive content (e.g., tables with repeated column headers).
+    """
+    if len(response) < _DEGEN_PHRASE_LEN * (_DEGEN_MAX_REPEATS + 1):
+        return False
+    sample_end = max(len(response) // 4, _DEGEN_PHRASE_LEN * 2)
+    for offset in range(0, min(sample_end, 600), 20):
+        phrase = response[offset:offset + _DEGEN_PHRASE_LEN]
+        if phrase.strip() and response.count(phrase) > _DEGEN_MAX_REPEATS:
+            return True
+    return False
+
+
 def detect_escalation(
     result: Optional[TestCaseResult],
     doc_content: str,
@@ -147,6 +189,14 @@ def detect_escalation(
         reasons.append(EscalationReason.EMPTY_FILE)
         return reasons
 
+    # context_pressure: tier-1 soft pre-emption at 75% of context window.
+    # Fires before token_size (hard ceiling) to keep T1 in its stable zone.
+    # Not applied to tier 2+ — Qwen handles large contexts reliably.
+    if tier == 1:
+        soft_ceiling = int(_T1_PREEMPT_RATIO * context_window)
+        if _estimate_tokens(doc_content) > soft_ceiling:
+            reasons.append(EscalationReason.CONTEXT_PRESSURE)
+
     # token_size: document would overflow context (checked before API call)
     token_budget = context_window - max_tokens - _OVERHEAD_TOKENS
     if _estimate_tokens(doc_content) > token_budget:
@@ -171,6 +221,10 @@ def detect_escalation(
     # first_token_decision: model pattern-matched on structure without reading content
     if _is_first_token_decision(result.response_text):
         reasons.append(EscalationReason.FIRST_TOKEN_DECISION)
+
+    # response_degeneration: repetition loop — same phrase echoed many times
+    if _is_response_degeneration(result.response_text):
+        reasons.append(EscalationReason.RESPONSE_DEGENERATION)
 
     return reasons
 
@@ -232,9 +286,10 @@ def cascade_run(
             EscalationReason.EMPTY_FILE,
             EscalationReason.TOKEN_SIZE,
         }
-        # file_size only skips tier 1 (tier 2+ handles short docs)
+        # tier-1-only pre-flight skips
         if tier_idx == 1:
             hard_skip_triggers.add(EscalationReason.FILE_SIZE)
+            hard_skip_triggers.add(EscalationReason.CONTEXT_PRESSURE)
 
         if any(r in hard_skip_triggers for r in pre_reasons):
             tier_results.append(TierResult(

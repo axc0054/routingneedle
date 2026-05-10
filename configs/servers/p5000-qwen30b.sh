@@ -13,5 +13,5 @@ numactl --cpunodebind=0 --membind=0 \
   --mlock \
   -c 16384 \
   --host 127.0.0.1 \
-  --port 8080 \
+  --port 8082 \
   2>&1 | tee /home/alex/logs/routingneedle_server_$(date +%Y%m%d_%H%M%S).log
