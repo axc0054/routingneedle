@@ -36,8 +36,8 @@ PHASE_SECTIONS = {
 PHASE_NAMES = {
     0: "Preparation — create scaffold dirs + in-place renames (ADJ-019: rename emoji file); no zone migrations",
     1: "Low-Risk Renumbers — zero-link zones (07_Outputs→03_Outputs, 06_Media→02_Domains/Media)",
-    2: "Domain Migrations — Parenting and Legal",
-    3: "Framework Dissolution — Homelab, AI split, build projects",
+    2: "Domain Migrations — move 03_Parenting→02_Domains/Parenting and 04_Legal→02_Domains/Legal as full zones; move 04_Legal/00_Templates→00_System/Templates/Legal (ADJ-009); create 02_Domains/Legal/Working_Drafts (ADJ-008)",
+    3: "Framework Dissolution — move 08_Professional_Development→02_Domains/Professional_Development (ADJ-005); move 09_Personal_Development→02_Domains/Personal_Development (ADJ-006); move 05_Car_Build→05_Framework/05_Car_Build (ADJ-001); move 02_Knowledge_Index→00_System/Knowledge_Control (ADJ-014); move Clippings→01_Inbox/Raw_Capture (ADJ-007)",
     4: "CGG Migration — highest risk; 804 inbound path-form wikilinks",
     5: "Post-Migration Validation — no filesystem edits",
 }
@@ -269,8 +269,24 @@ def execute_operation(op: dict, dry_run: bool) -> bool:
             print(f"  SKIP       {src_rel}  (not found)")
             return False
         if dst.exists():
-            print(f"  SKIP       {src_rel}  (destination already exists: {dst_rel})")
-            return False
+            # If destination is an empty scaffold (only .gitkeep), clear it so
+            # git mv can replace it rather than moving src INTO it as a subdir.
+            dst_contents = list(dst.iterdir()) if dst.is_dir() else []
+            if dst.is_dir() and all(f.name == ".gitkeep" for f in dst_contents):
+                print(f"  CLEAR      {dst_rel}/.gitkeep  (scaffold placeholder → replacing with zone move)")
+                if not dry_run:
+                    subprocess.run(
+                        ["git", "-C", str(VAULT_DEV), "rm", "-f",
+                         str((dst / ".gitkeep").relative_to(VAULT_DEV))],
+                        capture_output=True,
+                    )
+                    # git rm on the last file in a dir removes the dir from
+                    # the working tree automatically; only rmdir if still present.
+                    if dst.exists():
+                        dst.rmdir()
+            else:
+                print(f"  SKIP       {src_rel}  (destination already exists with content: {dst_rel})")
+                return False
         print(f"  {kind.upper():10s} {src_rel}  →  {dst_rel}  — {note}")
         if not dry_run:
             dst.parent.mkdir(parents=True, exist_ok=True)
