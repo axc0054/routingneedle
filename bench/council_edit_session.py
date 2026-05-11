@@ -34,7 +34,7 @@ PHASE_SECTIONS = {
 }
 
 PHASE_NAMES = {
-    0: "Preparation — structural scaffold only; no content moves",
+    0: "Preparation — create scaffold dirs + in-place renames (ADJ-019: rename emoji file); no zone migrations",
     1: "Low-Risk Renumbers — zero-link zones (07_Outputs→03_Outputs, 06_Media→02_Domains/Media)",
     2: "Domain Migrations — Parenting and Legal",
     3: "Framework Dissolution — Homelab, AI split, build projects",
