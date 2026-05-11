@@ -135,6 +135,14 @@ the council is restructuring), resolve in `dev` — `prod` is never rebased.
 4. **Dev path constant** — all council edit scripts import `VAULT_DEV` from a
    shared config and call `_assert_dev_target()` before any write.
 
+5. **Git-native mutations** — all moves, renames, and deletes in any vault
+   worktree must use `git mv` and `git rm`, not shell `mv`/`rm` or Python
+   `os.rename`/`shutil.move`/`Path.rename`. This preserves per-file history
+   across the dev→test→prod chain and makes every structural change atomic,
+   logged, and reversible via `git revert`. `council_edit_session.py` enforces
+   this for council operations; the same rule applies to any manual or scripted
+   mutation in any of the three worktrees.
+
 ---
 
 ## Benchmark Reads vs Edit Writes
