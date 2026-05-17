@@ -1,5 +1,11 @@
 # RoutingNeedle model config — DeepSeek-V2-Lite on WX9100
 # Gate 6 validated production config
+#
+# KNOWN BEHAVIOR (confirmed 2026-05-17): long-context /v1/chat/completions
+# calls from external scripts echo the prompt instead of generating. Chat
+# template is present but stop tokens are not applied server-side. Safe here
+# because RoutingNeedle prompts are short and templated. For free-form text
+# generation use T2 (port 8082) or add stop=["\n\nUser:", "\nUser:"].
 [model]
 name = "deepseek-v2-lite-wx9100"
 api_base = "http://127.0.0.1:8081/v1"

@@ -19,7 +19,7 @@ class ClientConfig:
     # freely; harmless flags are just ignored by models that don't recognize them.
     reasoning_effort: str | None = None    # sends `reasoning_effort: <value>` in request body (e.g. "none", "low")
     prefill_no_think: bool = False         # appends an assistant message containing `<think>\n</think>\n\n`
-    stop: list[str] | None = None          # stop sequences sent to the server; useful for models that parrot the prompt back (Gemma 4)
+    stop: list[str] | None = None          # stop sequences sent to the server; useful for models that parrot the prompt back (Gemma 4, DeepSeek-V2-Lite on long contexts)
     use_max_completion_tokens: bool = False  # send `max_completion_tokens` instead of `max_tokens` (required by OpenAI GPT-5 family)
 
 
