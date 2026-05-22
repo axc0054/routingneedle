@@ -7,9 +7,9 @@ import json, urllib.request, time, re, sys
 from pathlib import Path
 
 VAULT  = Path("/home/alex/Documents/Remote Access Vault")
-SUITE  = VAULT / "00_System/Logs/Vault_Defragmentation_Research/Council_Test_Suite"
-MATRIX = VAULT / "00_System/Logs/Vault_Defragmentation_Research/18_Council_Decision_Matrix.md"
-OUT    = VAULT / "00_System/Logs/Vault_Defragmentation_Research/Council_Test_Results_Partial_Retest.json"
+SUITE  = VAULT / "00_System/System_Projects/Vault_Defragmentation_Research/Council_Test_Suite"
+MATRIX = VAULT / "00_System/System_Projects/Vault_Defragmentation_Research/18_Council_Decision_Matrix.md"
+OUT    = VAULT / "00_System/System_Projects/Vault_Defragmentation_Research/Council_Test_Results_Partial_Retest.json"
 
 T1_URL = "http://127.0.0.1:8081/v1/chat/completions"
 T2_URL = "http://127.0.0.1:8082/v1/chat/completions"
