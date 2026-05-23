@@ -44,6 +44,13 @@ Escalation triggers: `file_size`, `context_pressure` (75% of T1 context window),
 `file_type`, `empty_file`, `api_error`, `first_token_decision`, `response_degeneration`.
 See [`bench/cascade.py`](bench/cascade.py) for full documentation.
 
+> **Scope note:** The cascade suite validates only the two persistent always-on inference
+> services (T1/WX9100 and T2/P5000). The remaining model configs under `configs/models/`
+> (gemma, gpt-5.5, qwen3-4b, qwen36-35b, claude-sonnet, etc.) belong to the
+> [Positional Recall Benchmark](#positional-recall-benchmark) — the CodeNeedle fork at the
+> bottom of this file. They are not council routing participants and are not exercised by
+> `run_suite.py`.
+
 ---
 
 ## Offline Peer Review Matrix
