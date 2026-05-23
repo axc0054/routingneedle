@@ -250,6 +250,86 @@ def score_routing_assertion(
     )
 
 
+def score_peer_review(
+    tc_id: str,
+    response: str,
+    source: str,
+    reference_response: str,
+) -> CouncilScore:
+    """
+    Blind cross-evaluation scorer for the Offline Peer Review Matrix.
+
+    Evaluates `response` against the source document and a reference response
+    from another model (model identifier must be stripped before calling).
+
+    Scoring criteria:
+      1. Evidence grounding  — response cites text present in source
+      2. Hallucination check — quoted claims traceable to source
+      3. Contradiction check — response makes no claims that directly contradict
+                               the reference response on factual assertions
+      4. Completeness delta  — reference response contains key spans absent from response
+
+    Returns CouncilScore. The `notes` field carries the detailed cross-comparison.
+    Evidence recall is based on shared key spans with the reference response.
+    """
+    resp_norm = _normalize(response)
+    ref_norm  = _normalize(reference_response)
+    src_norm  = _normalize(source)
+
+    # Evidence grounding: quoted spans must be traceable to source
+    quotes = re.findall(r'"([^"]{8,})"', response)
+    hallucinations = []
+    for q in quotes:
+        if _normalize(q) not in src_norm:
+            hallucinations.append(q[:60] + "..." if len(q) > 60 else q)
+
+    # Completeness delta: extract key noun phrases (≥3 words) from reference
+    # that are absent from the evaluated response — a rough coverage gap signal.
+    ref_phrases = re.findall(r'[a-z][a-z0-9 ]{15,40}[a-z0-9]', ref_norm)
+    missing_ref_spans = [p for p in ref_phrases if p not in resp_norm]
+    coverage_gap = len(missing_ref_spans) / max(len(ref_phrases), 1)
+    evidence_recall = round(1.0 - coverage_gap, 3)
+
+    # Contradiction check: look for numeric or named facts in reference that
+    # appear with a different value in the response.
+    # Strategy: extract "word + digits" patterns; flag if they appear in reference
+    # but a different digit sequence appears near the same word in response.
+    contradictions: list[str] = []
+    for m in re.finditer(r'(\b[a-z_]+\b)\s+(\d[\d.,]+)', ref_norm):
+        label, ref_val = m.group(1), m.group(2)
+        resp_match = re.search(rf'\b{re.escape(label)}\b\s+(\d[\d.,]+)', resp_norm)
+        if resp_match and resp_match.group(1) != ref_val:
+            contradictions.append(f"{label}: ref={ref_val}, response={resp_match.group(1)}")
+
+    cf_no_evidence = _check_cloud_friendly_evidence(response, source)
+    passed = (
+        not hallucinations
+        and not contradictions
+        and not cf_no_evidence
+        and evidence_recall >= 0.6
+    )
+
+    notes = (
+        f"evidence_recall={evidence_recall:.2f} | "
+        f"hallucinations={len(hallucinations)} | "
+        f"contradictions={len(contradictions)} | "
+        f"coverage_gap_phrases={len(missing_ref_spans)}"
+    )
+    if contradictions:
+        notes += f" | contradictions_detail={contradictions[:3]}"
+
+    return CouncilScore(
+        testcase_id=tc_id,
+        scoring_mode="peer_review",
+        passed=passed,
+        evidence_recall=evidence_recall,
+        hallucination_flags=hallucinations,
+        missing_fields=missing_ref_spans[:5],
+        cloud_friendly_without_evidence=cf_no_evidence,
+        notes=notes,
+    )
+
+
 def score(result, testcase: dict, source_path: str) -> CouncilScore:
     """
     Dispatch to correct scorer based on testcase scoring_mode.
@@ -280,6 +360,11 @@ def score(result, testcase: dict, source_path: str) -> CouncilScore:
             tc_id, response, source,
             tc["expected_route"],
             tc.get("failure_signal", ""),
+        )
+    elif mode == "peer_review":
+        return score_peer_review(
+            tc_id, response, source,
+            tc.get("reference_response", ""),
         )
     else:
         raise ValueError(f"Unknown scoring mode: {mode}")
