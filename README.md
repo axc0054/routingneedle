@@ -16,9 +16,11 @@ T2 is called only when T1 triggers an escalation condition.
 | Tier | Model                   | Hardware                      | Port | Role                                 |
 |------|-------------------------|-------------------------------|------|--------------------------------------|
 | T1   | DeepSeek-V2-Lite Q4_K_M | WX9100 / Vulkan / NUMA node 1 | 8081 | Fast triage; escalates on 6 triggers |
-| T2   | Qwen3-30B-A3B Q4_K_M    | P5000 / CUDA / NUMA node 0    | 8082 | Authoritative resolution tier        |
+| T2   | Qwen3-30B-A3B Q4_K_M    | P5000 / CUDA / NUMA node 0    | 8082 | Governance seat; authoritative tier  |
 
-**Standing (2026-05-09, cascade-validated):** 8/8 PASS — TC-01 through TC-08.
+**Cascade standing (2026-05-09):** 8/8 PASS — TC-01 through TC-08.
+**T2 admission contract (2026-05-20):** Run 5 scaffolded — 15M / 0P / 0D / 0X. Contract granted.
+**T1:** No admission contract — triage/routing role only.
 
 ### Start servers
 
@@ -96,21 +98,27 @@ systemctl --user list-timers bench-peer-review.timer
 
 ---
 
-## Council QA Benchmark (legacy)
+## Council Admission Testing
 
-Older blind/scaffolded council tests for vault restructure decisions. Superseded by
-the cascade routing suite (TC-01 through TC-08) as the primary QA framework.
-Kept for reference — scripts remain functional.
+Blind/scaffolded governance reasoning suite — the Gate 1 test instrument for the
+[Model Admission Contract](../Documents/Remote%20Access%20Vault/00_System/Contracts/Model_Admission_Contract.md).
+Used to evaluate whether a model can reason correctly over vault governance decisions
+before it is assigned to a council tier.
+
+**Last run (2026-05-20):** Qwen3-30B-A3B Run 5 scaffolded — 15M / 0P / 0D / 0X.
+Contract granted. T2 seat assigned.
 
 ```bash
-# Blind (Drift Profile only)
+# Blind (Drift Profile only — diagnostic baseline, not pass/fail)
 cd bench && python council_blind_test.py
 # -> Council_Test_Results_Blind.json
 
-# Scaffolded (Drift Profile + section context)
+# Scaffolded (Drift Profile + Decision Matrix — pass/fail gate)
 cd bench && python council_matrix_test.py
 # -> Council_Test_Results_Scaffolded.json
 ```
+
+Pass criteria (scaffolded): ≥ 13 MATCH, 0 DIVERGE, 0 MISS across 15 test cases.
 
 Full workflow in [`COUNCIL_BENCHMARK_WORKFLOW.md`](COUNCIL_BENCHMARK_WORKFLOW.md).
 
