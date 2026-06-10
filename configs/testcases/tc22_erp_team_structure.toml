@@ -1,0 +1,12 @@
+# TC-22: Analytics ERP Team Structure — Professional_Development, not Capital_Grade_Governance
+# Tests that classifier tag "framework" does not override content classification
+[testcase]
+id = "TC-22"
+name = "Analytics ERP team structure — Professional_Development/Inventory, not CGG"
+corpus = "intake_routing_qa"
+document = "t22_routing.md"
+query = "Based on the routing challenge above, answer Q3: state the complete canonical vault path for this document. Format: 02_Domains/<domain>/<subfolder>/<filename>. Include all subdirectory levels."
+expected_extraction = "02_Domains/Professional_Development/01_Inventory"
+scoring_mode = "keyword_match"
+failure_signal = "routes to Capital_Grade_Governance because classifier tagged domain:framework"
+no_think = false

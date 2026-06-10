@@ -1,0 +1,12 @@
+# TC-19: Master Dispute Log — Parenting domain, multi-stage content, earliest-entry rule
+# Tests that draft status doesn't affect path and earliest-entry stage rule applies
+[testcase]
+id = "TC-19"
+name = "Master dispute log — Parenting/Toddler, draft status does not change path"
+corpus = "intake_routing_qa"
+document = "t19_routing.md"
+query = "Based on the routing challenge above, answer Q4: state the complete canonical vault path for this document. The stage is determined by the earliest entries in the document, not the current date. Format: 02_Domains/Parenting/Lorelai/<stage>/<subcategory>/<filename>."
+expected_extraction = "02_Domains/Parenting/Lorelai/02_Toddler/Disputes"
+scoring_mode = "keyword_match"
+failure_signal = "routes to Legal because document contains dispute/financial data, or assigns 03_Elementary because that is current stage"
+no_think = false

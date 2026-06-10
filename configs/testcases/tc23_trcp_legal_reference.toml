@@ -1,0 +1,12 @@
+# TC-23: Texas Rules of Civil Procedure — Legal/03_Reference, not case evidence
+# Tests that a published statute routes to Reference, not a Lorelai case evidence stage
+[testcase]
+id = "TC-23"
+name = "TRCP — Legal/03_Reference, not Lorelai case exhibit"
+corpus = "intake_routing_qa"
+document = "t23_routing.md"
+query = "Based on the routing challenge above, answer Q3: state the complete canonical vault path for this document. Format: 02_Domains/<domain>/<track>/<filename>. Include all subdirectory levels."
+expected_extraction = "02_Domains/Legal/03_Reference"
+scoring_mode = "keyword_match"
+failure_signal = "routes TRCP as a Lorelai case evidence exhibit, or adds a stage qualifier to the reference path"
+no_think = false

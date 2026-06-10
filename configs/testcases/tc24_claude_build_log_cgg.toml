@@ -1,0 +1,12 @@
+# TC-24: Claude AI Build Log — Capital_Grade_Governance, not AI_Operations
+# Tests CGG-affiliated process logs vs general AI operational logs
+[testcase]
+id = "TC-24"
+name = "Claude AI Build Log — Capital_Grade_Governance, not AI_Operations"
+corpus = "intake_routing_qa"
+document = "t24_routing.md"
+query = "Based on the routing challenge above, answer Q4: state the complete canonical vault path for this document. Format: 02_Domains/<domain>/<filename>. Include all subdirectory levels."
+expected_extraction = "02_Domains/Capital_Grade_Governance"
+scoring_mode = "keyword_match"
+failure_signal = "routes to AI_Operations/Claude/ because the document is about Claude usage, or routes to Professional_Development"
+no_think = false

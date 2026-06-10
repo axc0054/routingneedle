@@ -1,0 +1,12 @@
+# TC-16: Pre-Case Police Report — Legal domain, pre-birth incident stage assignment
+# Tests whether council routes pre-Lorelai-birth incident report to Legal/01_Infant
+[testcase]
+id = "TC-16"
+name = "Pre-case police report routing — stage assignment for pre-birth evidence"
+corpus = "intake_routing_qa"
+document = "t16_routing.md"
+query = "Based on the routing challenge above, answer Q3: state the complete canonical vault path for this document. Format: 02_Domains/<domain>/<case>/<stage>/Evidence/<subcategory>/<filename>. Include all subdirectory levels."
+expected_extraction = "02_Domains/Legal/01_Case_Lorelai/01_Infant/Evidence/Incident_Reports"
+scoring_mode = "keyword_match"
+failure_signal = "routes to wrong domain, wrong stage, or emits 04_Legal/ old-style path"
+no_think = false

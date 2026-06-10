@@ -7,7 +7,7 @@ model_id = "qwen3-30b-a3b"
 lane = "p5000-cuda"
 no_think_suffix = " /no_think"
 force_no_think = true
-max_tokens = 256
+max_tokens = 512
 context_window = 16384
 
 [scoring]

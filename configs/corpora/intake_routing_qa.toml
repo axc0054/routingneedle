@@ -1,0 +1,7 @@
+[corpus]
+name = "intake_routing_qa"
+base_path = "/home/alex/routingneedle/configs/testcases/fixtures/intake_routing"
+glob = "*.md"
+file_type = "md"
+min_content_lines = 5
+description = "Intake Routing QA fixtures T-16 through T-26 — context+challenge only, no target findings"

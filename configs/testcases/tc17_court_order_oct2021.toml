@@ -1,0 +1,12 @@
+# TC-17: Court Order Oct 2021 — Infant stage, Legal_Filings subcategory
+# Tests stage boundary (Oct 2021 = 01_Infant) and filing vs visitation category
+[testcase]
+id = "TC-17"
+name = "Court order Oct 2021 — Infant stage, Legal_Filings routing"
+corpus = "intake_routing_qa"
+document = "t17_routing.md"
+query = "Based on the routing challenge above, answer Q3: state the complete canonical vault path for this document. Format: 02_Domains/Legal/01_Case_Lorelai/<stage>/Evidence/<subcategory>/<filename>. Include the full path including stage and Evidence subcategory."
+expected_extraction = "02_Domains/Legal/01_Case_Lorelai/01_Infant/Evidence/Legal_Filings"
+scoring_mode = "keyword_match"
+failure_signal = "assigns to 02_Toddler, routes to Parenting, uses Visitation_Records for a signed court order, or emits 04_Legal/"
+no_think = false

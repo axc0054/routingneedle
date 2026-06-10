@@ -1,0 +1,14 @@
+# TC-26: Project scaffold source and tooling governance meta-test
+# Tests that council knows to use Templates/Project/ + new_project.py, not copy from existing projects
+[testcase]
+id = "TC-26"
+name = "Project scaffold governance — Templates/Project/ source, new_project.py tool"
+corpus = "intake_routing_qa"
+document = "t26_routing.md"
+query = "Answer all four questions above. Name the canonical source directory for scaffold files, the script used to initialize a new project, and the script used to close a project and generate a playbook."
+expected_scaffold = "Templates/Project"
+expected_tool = "new_project.py"
+expected_close = "close_project.py"
+scoring_mode = "multi_field"
+failure_signal = "recommends copying scaffold from an existing project, or does not reference Templates/Project/"
+no_think = false

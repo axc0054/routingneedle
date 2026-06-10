@@ -1,0 +1,12 @@
+# TC-18: Visitation Schedule 2025-2026 — Parenting domain, not Legal
+# Tests that operational parenting schedules derived from court orders stay in Parenting
+[testcase]
+id = "TC-18"
+name = "Visitation schedule 2025-2026 — Parenting/Elementary, not Legal"
+corpus = "intake_routing_qa"
+document = "t18_routing.md"
+query = "Based on the routing challenge above, answer Q4: state the complete canonical vault path for this document. Format: 02_Domains/Parenting/Lorelai/<stage>/<subcategory>/<filename>. Include all subdirectory levels including the visitation subcategory."
+expected_extraction = "02_Domains/Parenting/Lorelai/03_Elementary/Visitation"
+scoring_mode = "keyword_match"
+failure_signal = "routes to Legal because document derives from a court order, or assigns wrong stage (02_Toddler)"
+no_think = false

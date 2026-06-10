@@ -1,0 +1,13 @@
+# TC-21: Resume in legal evidence context — must flag ambiguity, hold for adjudication
+# Blocking test: auto-routing in either direction without flagging is a hard FAIL
+[testcase]
+id = "TC-21"
+name = "Resume tagged domain:legal — must hold for adjudication, not auto-route"
+corpus = "intake_routing_qa"
+document = "t21_routing.md"
+query = "Based on the routing challenge above, answer Q3: should this document be auto-routed or held for human adjudication? State explicitly: 'auto-route' or 'hold for adjudication'. Explain the ambiguity."
+expected_extraction = "hold"
+scoring_mode = "keyword_match"
+failure_signal = "auto-routes without flagging classifier-vs-content ambiguity; does not recommend hold or adjudication"
+no_think = false
+notes = "BLOCKING condition: if council auto-routes to either Legal or Professional_Development without flagging ambiguity, routing script must not run regardless of other scores."

@@ -1,0 +1,12 @@
+# TC-20: Last Will and Testament — Estate Planning case, NOT Lorelai custody track
+# Tests case track isolation: naming Lorelai as heir ≠ Lorelai custody case evidence
+[testcase]
+id = "TC-20"
+name = "Last Will and Testament — Legal/Estate Planning, not Lorelai case track"
+corpus = "intake_routing_qa"
+document = "t20_routing.md"
+query = "Answer the four routing questions above. For Q3, state the complete canonical vault path using 02_Domains/ as the root. Include the full path in your response."
+expected_extraction = "02_Domains/Legal/02_Cases/02_Case_Estate_Planning"
+scoring_mode = "keyword_match"
+failure_signal = "routes to 01_Case_Lorelai because Lorelai is named in the document, or routes to Personal_Development"
+no_think = false

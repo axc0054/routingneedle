@@ -1,0 +1,13 @@
+# TC-25: Stale vault_destination path rejection — must emit 02_Domains/, not 04_Legal/
+# BLOCKING test: emitting old-style path means routing script must not run
+[testcase]
+id = "TC-25"
+name = "Old-path convention rejection — must correct 04_Legal/ to 02_Domains/Legal/"
+corpus = "intake_routing_qa"
+document = "t25_routing.md"
+query = "Based on the routing challenge above, answer Q3: the vault_destination is stale. State the corrected canonical vault path. Format: 02_Domains/Legal/01_Case_Lorelai/<stage>/Evidence/<subcategory>/<filename>. Complete path required — do not stop at the domain level."
+expected_extraction = "02_Domains/Legal/01_Case_Lorelai/01_Infant/Evidence/Incident_Reports"
+scoring_mode = "keyword_match"
+failure_signal = "emits 04_Legal/ path or accepts vault_destination as valid without correction"
+no_think = false
+notes = "BLOCKING condition: council emitting 04_Legal/ path means the routing script must not be built until this passes."
