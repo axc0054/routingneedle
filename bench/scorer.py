@@ -22,6 +22,7 @@ class LineTag(str, Enum):
     HALLUCINATED = "hallucinated"  # yellow — produced but not in expected window
     BONUS = "bonus"                # blue — produced, correct, past the primary 20
     IGNORED = "ignored"            # dim — correct, but not eligible for credit
+    REINDENTED = "reindented"      # cyan — right content, different leading whitespace
 
 
 @dataclass
@@ -38,9 +39,11 @@ class FunctionScore:
     hallucinated: int
     bonus_matched: int
     passed: bool
-    expected_tagged: list[LineResult]    # expected primary side (matched/missing/ignored)
-    predicted_tagged: list[LineResult]   # model output side (matched/halluc/bonus/ignored)
+    expected_tagged: list[LineResult]    # expected primary side (matched/missing/ignored/reindented)
+    predicted_tagged: list[LineResult]   # model output side (matched/halluc/bonus/ignored/reindented)
     error: str | None = None             # request errored or returned no usable content; renderers should show ERROR instead of FAIL so it isn't confused with a real recall miss
+    reindented: int = 0
+    spacing_deviation: bool = False      # True when any line differs only in whitespace
     # Composition breakdown — how much of the score came from code vs prose.
     code_matched: int = 0
     code_total: int = 0
@@ -130,6 +133,34 @@ def score(
             else:
                 pred_kind[pi] = 0 if ei < len(exp_primary) else 1
 
+    # Whitespace-only differences are not hallucinations. Under strict scoring
+    # a re-indented line fails to align, so it lands in the unmatched bucket on
+    # BOTH sides — the expected line reads MISSING and the emitted line reads
+    # HALLUCINATED, for what is a single formatting difference. Pair those two
+    # back up and label them for what they are.
+    #
+    # Only meaningful in strict mode: with relax_indent the lines already
+    # aligned, so nothing is left over to pair.
+    reindented_exp: set[int] = set()
+    if not relax_indent:
+        unmatched_exp: dict[str, list[int]] = {}
+        for i in range(len(exp_full)):
+            if matched_exp[i]:
+                continue
+            key = exp_full[i].strip()
+            if key:
+                unmatched_exp.setdefault(key, []).append(i)
+        for pi, kind in enumerate(pred_kind):
+            if kind != -1:
+                continue
+            key = pred[pi].strip()
+            candidates = unmatched_exp.get(key)
+            if not candidates:
+                continue
+            ei = candidates.pop(0)          # consume, so it pairs at most once
+            reindented_exp.add(ei)
+            pred_kind[pi] = 3               # 3 = REINDENTED (distinct from 2 = IGNORED)
+
     n_primary = len(exp_primary)
     primary_total = sum(1 for i in range(n_primary) if eligible_full[i])
     primary_matched = sum(
@@ -138,6 +169,7 @@ def score(
     bonus_matched = sum(
         1 for i in range(n_primary, len(exp_full)) if eligible_full[i] and matched_exp[i]
     )
+    reindented = sum(1 for k in pred_kind if k == 3)
 
     code_total = sum(1 for i in range(n_primary) if kinds_full[i] == KIND_CODE)
     code_matched = sum(
@@ -174,6 +206,8 @@ def score(
             tag = LineTag.IGNORED
         elif matched_exp[i]:
             tag = LineTag.MATCHED
+        elif i in reindented_exp:
+            tag = LineTag.REINDENTED
         else:
             tag = LineTag.MISSING
         expected_tagged.append(LineResult(tag, expected_display[i]))
@@ -182,6 +216,7 @@ def score(
         0: LineTag.MATCHED,
         1: LineTag.BONUS,
         2: LineTag.IGNORED,
+        3: LineTag.REINDENTED,
         -1: LineTag.HALLUCINATED,
     }
     predicted_tagged = [
@@ -197,6 +232,8 @@ def score(
         passed=primary_total > 0 and (primary_matched / primary_total) >= PASS_RATIO,
         expected_tagged=expected_tagged,
         predicted_tagged=predicted_tagged,
+        reindented=reindented,
+        spacing_deviation=reindented > 0,
         code_matched=code_matched,
         code_total=code_total,
         prose_matched=prose_matched,
