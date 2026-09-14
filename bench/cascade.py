@@ -3,7 +3,7 @@ cascade.py — RoutingNeedle tiered cascade routing.
 
 Implements failure propagation across model tiers:
   Tier 1: DeepSeek-V2-Lite (WX9100 Vulkan, NUMA node 1, fast triage)
-  Tier 2: Qwen3-30B-A3B   (P5000 CUDA,    NUMA node 0, generalist reasoner)
+  Tier 2: Qwen3.6-35B-A3B (P5000 CUDA,    NUMA node 0, generalist reasoner)
   Tier 3+: Adjudicator queue (frontier models + user — not called live)
 
 Propagation triggers (any one fires escalation to next tier):
